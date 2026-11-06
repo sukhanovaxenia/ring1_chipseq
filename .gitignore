@@ -25,3 +25,6 @@ __pycache__/
 .Rhistory
 .RData
 .Rproj.user/
+
+# Server-specific reference paths for preprocessing/
+preprocessing/paths.sh

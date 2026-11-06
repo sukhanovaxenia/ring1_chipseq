@@ -1,61 +1,44 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# deepTools profiles and heatmaps of ChIP signal around the TSS of the pooled bdgdiff regions.
+# Usage: bash visualize_chip.sh <project_dir> [bigwig_dir] [flank_bp]
+#   bigwig_dir default: normalization/bs10 (output of normalization.sh); flank default: 1000
+# In:  peaks/diff/bed3/<P>_<cond>_unique.bed (from bdgdiff_call.sh pooled),
+#      <bigwig_dir>/<P>_<cond>_rep*.TMM.bigwig
+# Out: visualization/matrix/<cond>_TSS.gz, visualization/regions<P><cond>_TSS.bed,
+#      visualization/figures/TSS_<cond>_profile.png, TSS_<cond>_profile-heatmap.png
+source "$(dirname "$0")/common.sh"
+init_work_dir "${1:-}"
+bw_dir="${2:-$WORK_DIR/normalization/bs10}"
+flank="${3:-1000}"
+require_tools computeMatrix plotProfile plotHeatmap
+vis="$WORK_DIR/visualization"
+mkdir -p "$vis/matrix" "$vis/figures"
 
-WORK_DIR="$1"
+for cond in "${CONDITIONS[@]}"; do
+  regions="$WORK_DIR/peaks/diff/bed3/${SAMPLE_PREFIX}_${cond}_unique.bed"
+  require_files "$regions"
+  bws=(); labels=()
+  for rep in "${REPLICATES[@]}"; do
+    bws+=("$bw_dir/$(chip_name "$cond" "$rep").TMM.bigwig"); labels+=("$rep")
+  done
+  require_files "${bws[@]}"
+  matrix="$vis/matrix/${cond}_TSS.gz"
+  echo "$cond: matrix and plots (TSS +/- $flank bp)"
 
-shift;
+  computeMatrix reference-point --referencePoint TSS -b "$flank" -a "$flank" \
+    -R "$regions" -S "${bws[@]}" --samplesLabel "${labels[@]}" --skipZeros -p "$THREADS" \
+    -o "$matrix" --outFileSortedRegions "$vis/regions${SAMPLE_PREFIX}${cond}_TSS.bed" \
+    > "$LOGS/${SAMPLE_PREFIX}_${cond}.computeMatrix.log" 2>&1
 
-computeMatrix reference-point --referencePoint TSS \
--b 1000 -a 1000 \
--R $WORK_DIR/peaks/diff/bed3/RING1_BF_unique.bed \
--S $WORK_DIR/normalization/bin/RING1_BF_rep*.binned.TMM.bigwig \
---skipZeros \
--o $WORK_DIR/visualization/matrix/BF_TSS.gz \
--p 6 \
---outFileSortedRegions $WORK_DIR/visualization/regionsRING1BF_TSS.bed \
-> $WORK_DIR/logs/RING1_BF.comp_matrix.log 2>&1
+  plotProfile -m "$matrix" -out "$vis/figures/TSS_${cond}_profile.png" \
+    --perGroup --colors green purple --refPointLabel TSS \
+    --regionsLabel "${SAMPLE_PREFIX}_${cond}_unique" \
+    --plotTitle "${SAMPLE_PREFIX} ${cond} read density" \
+    > "$LOGS/TSS_${cond}_profile.log" 2>&1
 
-computeMatrix reference-point --referencePoint TSS \
--b 1000 -a 1000 \
--R $WORK_DIR/peaks/diff/bed3/RING1_HS_unique.bed \
--S $WORK_DIR/normalization/bin/RING1_HS_rep*.binned.TMM.bigwig \
---skipZeros \
--o $WORK_DIR/visualization/matrix/HS_TSS.gz \
--p 6 \
---outFileSortedRegions $WORK_DIR/visualization/regionsRING1HS_TSS.bed \
-> $WORK_DIR/logs/RING1_HS.comp_matrix.log 2>&1
-
-# now visualize
-
-plotProfile -m $WORK_DIR/visualization/matrix/BF_TSS.gz \
--out $WORK_DIR/visualization/figures/TSS_BF_profile.png \
---perGroup \
---colors green purple \
---plotTitle "" --samplesLabel "Rep1" "Rep2" \
---refPointLabel "TSS" \
--T "RING1 BF read density" \
--z "" \
-> $WORK_DIR/logs/TSS_BF_profile.log 2>&1
-
-plotProfile -m $WORK_DIR/visualization/matrix/HS_TSS.gz \
--out $WORK_DIR/visualization/figures/TSS_HS_profile.png \
---perGroup \
---colors green purple \
---plotTitle "" --samplesLabel "Rep1" "Rep2" \
---refPointLabel "TSS" \
--T "RING1 HS read density" \
--z "" \
-> $WORK_DIR/logs/TSS_HF_profile.log 2>&1
-
-# heatmap with the same info
-
-plotHeatmap -m $WORK_DIR/visualization/matrix/BF_TSS.gz \
--out $WORK_DIR/visualization/figures/TSS_BF_profile-heatmap.png \
---colorMap RdBu \
---zMin -2 --zMax 2 \
-> $WORK_DIR/logs/TSS_BF_profile-heatmap.log 2>&1
-
-plotHeatmap -m $WORK_DIR/visualization/matrix/HS_TSS.gz \
--out $WORK_DIR/visualization/figures/TSS_HS_profile-heatmap.png \
---colorMap RdBu \
---zMin -2 --zMax 2 \
-> $WORK_DIR/logs/TSS_HS_profile-heatmap.log 2>&1
+  # Signal is non-negative: a sequential colour map starting at zero uses the whole scale.
+  plotHeatmap -m "$matrix" -out "$vis/figures/TSS_${cond}_profile-heatmap.png" \
+    --colorMap Reds --zMin 0 --refPointLabel TSS \
+    --regionsLabel "${SAMPLE_PREFIX}_${cond}_unique" \
+    > "$LOGS/TSS_${cond}_profile-heatmap.log" 2>&1
+done

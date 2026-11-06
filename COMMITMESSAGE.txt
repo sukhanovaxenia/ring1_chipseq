@@ -1,13 +1,36 @@
-Add preprocessing scripts and document the csaw/edgeR step
+Fix and unify preprocessing scripts
 
-- preprocessing/: shell scripts used on the server before the
-  downstream analysis (trimming, alignment, duplicate removal, MACS2
-  callpeak on pooled and individual replicates, bdgdiff, bigWig
-  conversion, HOMER annotation, deepTools TSS profiles). Kept as used;
-  several of them still need per-sample edits before a rerun.
-- README: new section on differential binding with csaw + edgeR
-  (regions, background normalization, filterByExpr, QL model, TREAT
-  test, output files); later sections renumbered.
-- README: TSS profile section now points to
-  preprocessing/visualize_chip.sh and lists its actual parameters
-  (±1 kb, binned TMM bigWig); preprocessing/ added to the file tree.
+All scripts now share preprocessing/common.sh (set -euo pipefail, input
+checks, skip-if-done with FORCE=1) and read reference paths, thread
+count and sample naming from preprocessing/paths.sh, created from
+paths.example.sh and ignored by git. No server paths remain in the code.
+
+Fixes:
+- trimming.sh: adapter path no longer relies on an unexpanded "~";
+  output goes to trim/*.trim.fastq.gz as align_chip.sh expects.
+- align_chip.sh: bowtie2 alignment summary and timing go to
+  logs/<sample>.bowtie2.log (no --quiet); flagstat saved per sample.
+- rmdup.sh: skips *.dedup.bam on reruns, writes to align/chip/dedup/,
+  keeps duplicate metrics in logs/, indexes with samtools.
+- peak_calling.sh, peak_calling_reps.sh: loop over all conditions and
+  replicates (optional condition arguments); controls are taken from
+  CONTROL_PREFIX instead of sed on file names.
+- bdgdiff_call.sh: one script for pooled and per-replicate runs; depths
+  read from *_peaks.xls; writes BED3 copies for deepTools. Replaces
+  bdgdiff_call_merged.sh and scripts/bdgdiff_reps.sh.
+- bdg2bigwig.sh: missing log redirect fixed; bedClip before conversion.
+- normalization.sh: bin size is an argument (replaces
+  normalization_bin.sh, which used -bs 1 as well); exact lookup of the
+  scale factor by BAM name, error if missing.
+- annot_peaks.sh: annotates pooled or per-replicate sets, optional name
+  filter, creates the stats folder. Replaces stat.sh (broken basename).
+- visualize_chip.sh: loops over conditions; fixed title, region labels
+  and heatmap colour scale; flank size is an argument.
+- align_star.sh: kept for ChIP-seq/RNA-seq integration, same structure.
+- prepoc_norm.sh removed: featureCounts counting is done by csaw.
+
+Documentation:
+- README updated to the new script names and arguments.
+- RESULTS.md notes that the results were produced with the first
+  version of the preprocessing scripts (commit b852567) and lists the
+  defaults that differ in the cleaned-up version.

@@ -1,15 +1,31 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Align trimmed single-end ChIP-seq reads with bowtie2 and sort/index the BAM.
+# Usage: bash align_chip.sh <project_dir>
+# In:  <project_dir>/trim/*.trim.fastq.gz
+# Out: align/chip/<sample>.bam(.bai);
+#      logs/<sample>.bowtie2.log (alignment summary and timing), logs/<sample>.flagstat.txt
+source "$(dirname "$0")/common.sh"
+init_work_dir "${1:-}"
+require_vars BOWTIE2_INDEX
+require_tools bowtie2 samtools
+[[ -s "$BOWTIE2_INDEX.1.bt2" || -s "$BOWTIE2_INDEX.1.bt2l" ]] || die "bowtie2 index not found: $BOWTIE2_INDEX"
+mkdir -p "$WORK_DIR/align/chip"
 
-WORK_DIR="$1"
+shopt -s nullglob
+reads=("$WORK_DIR"/trim/*.trim.fastq.gz)
+((${#reads[@]})) || die "no trimmed reads in $WORK_DIR/trim"
 
-shift #remove WORK_DIR from the argument list
-
-for file in $(ls $WORK_DIR/trim/*trim.fastq.gz); do
-	# prefix=$(echo $file | sed 's/test\///g' | sed 's/\.trim\.fastq\.gz//g')
-	filename=$(basename $file)
-	prefix="${filename%.trim.fastq.gz}"
-	
-	echo "$prefix is being aligned"
-	bowtie2 -p 8 --no-unal -t --quiet --very-sensitive -x /home/intens2026/data/ref/hg38 -U $WORK_DIR/trim/$prefix.trim.fastq.gz | samtools view -@ 8 -F 4 -Sb | samtools sort -@ 8 -o $WORK_DIR/align/chip/$prefix.bam > $WORK_DIR/logs/$prefix.align.log 2>&1
-	samtools index $WORK_DIR/align/chip/$prefix.bam
+for file in "${reads[@]}"; do
+  sample=$(basename "$file" .trim.fastq.gz)
+  bam="$WORK_DIR/align/chip/$sample.bam"
+  echo "$sample: aligning"
+  is_done "$bam" && continue
+  # bowtie2 writes its summary to stderr -> own log; --no-unal drops unaligned reads.
+  bowtie2 -p "$THREADS" --very-sensitive --no-unal -t -x "$BOWTIE2_INDEX" -U "$file" \
+      2> "$LOGS/$sample.bowtie2.log" \
+    | samtools view -@ "$THREADS" -b - \
+    | samtools sort -@ "$THREADS" -o "$bam" - 2> "$LOGS/$sample.sort.log"
+  samtools index -@ "$THREADS" "$bam"
+  samtools flagstat -@ "$THREADS" "$bam" > "$LOGS/$sample.flagstat.txt"
+  grep -m1 'overall alignment rate' "$LOGS/$sample.bowtie2.log" || true
 done

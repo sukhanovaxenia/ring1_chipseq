@@ -32,10 +32,9 @@
 │   ├── run.py                основной конвейер, запуск по этапам
 │   ├── analysis.R            csaw + edgeR (дифференциальный анализ), ChIPseeker, GO, Gviz; вызывается из run.py
 │   ├── install.R             установка и проверка R-пакетов
-│   ├── bdgdiff_reps.sh       MACS2 bdgdiff по отдельным повторам
 │   ├── biomart_mapping.R     необязательно: Entrez → Ensembl через BioMart
 │   └── encode_refs.py        необязательно: поиск и загрузка треков ENCODE
-├── preprocessing/            скрипты предварительных шагов (тримминг, выравнивание, коллинг, bdgdiff), в исходном виде
+├── preprocessing/            скрипты предварительных шагов: тримминг, выравнивание, коллинг, bdgdiff, bigWig, HOMER, профили у TSS
 ├── tests/test_helpers.py     тесты вспомогательных функций run.py
 └── results/
     ├── tables/               таблицы QC, нормализации и дифференциального анализа
@@ -82,7 +81,7 @@ Rscript scripts/install.R install hg38   # доустановит недоста
 Rscript scripts/install.R check hg38
 ```
 
-Для отдельных шагов нужны также MACS2 (для `bdgdiff_reps.sh`) и HOMER с геномом hg38 (для аннотации).
+Для шагов из `preprocessing/` нужны также MACS2 и HOMER с геномом hg38. Пути к референсу эти скрипты берут из `preprocessing/paths.sh`; его нужно создать из `preprocessing/paths.example.sh`.
 
 ## Запуск
 
@@ -157,7 +156,7 @@ python scripts/run.py report            # index.html со ссылками на 
 ### 4. bdgdiff по отдельным повторам
 
 ```bash
-bash scripts/bdgdiff_reps.sh /path/to/ring
+bash preprocessing/bdgdiff_call.sh /path/to/ring reps     # pooled — для пулированных данных
 ```
 
 Скрипт сравнивает BF_repN и HS_repN, используя pileup и lambda из `peaks/reps/`. Глубину каждой пары он берёт из `*_peaks.xls`, которая соответствует наименьшему числу прочтений ChIP и контроля после фильтрации. На выходе получаются файлы `peaks/reps/diff/RING1_repN_{BF_unique,HS_unique,BF_HS_common}.bed`.
@@ -165,26 +164,17 @@ bash scripts/bdgdiff_reps.sh /path/to/ring
 ### 5. Аннотация HOMER
 
 ```bash
-mkdir -p peaks/reps/stats
-for f in peaks/reps/diff/*.bed; do
-    b=$(basename "$f" .bed)
-    annotatePeaks.pl "$f" hg38 -cpu 6 -annStats peaks/reps/stats/$b.stats.txt > annotation/reps/$b.annotated.bed
-done
+bash preprocessing/annot_peaks.sh /path/to/ring reps
 ```
 
 ### 6. Профили вокруг TSS (deepTools)
 
-Профили в `results/tss_profiles/` построены скриптом `preprocessing/visualize_chip.sh` по регионам пулированного bdgdiff, ±1 kb от TSS:
+Профили в `results/tss_profiles/` построены скриптом `preprocessing/visualize_chip.sh` по регионам пулированного bdgdiff, ±1 kb от TSS, на bigWig с шагом 1 bp:
 
 ```bash
-computeMatrix reference-point --referencePoint TSS -b 1000 -a 1000 --skipZeros \
-    -R peaks/diff/bed3/RING1_BF_unique.bed \
-    -S normalization/bin/RING1_BF_rep*.binned.TMM.bigwig -o BF_TSS.gz
-plotProfile -m BF_TSS.gz -out TSS_BF_profile.png --perGroup
-plotHeatmap -m BF_TSS.gz -out TSS_BF_profile-heatmap.png
+bash preprocessing/normalization.sh /path/to/ring <таблица коэффициентов> 1
+bash preprocessing/visualize_chip.sh /path/to/ring /path/to/ring/normalization/bs1
 ```
-
-Для HS команды те же.
 
 ### 7. Необязательные шаги
 
