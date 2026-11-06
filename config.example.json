@@ -1,0 +1,31 @@
+{
+  "project_root": "..",
+  "output_dir": "interpretation",
+  "genome": "hg38",
+  "biological_replicates_confirmed": true,
+  "threads": 8,
+  "mapq": 20,
+  "fragment_length": null,
+  "background_bin": 10000,
+  "fdr": 0.05,
+  "minimum_log2_fold_change": 1,
+  "promoter_flank": 3000,
+  "profile_flank": 3000,
+  "profile_bin": 50,
+  "blacklist": "references/hg38-blacklist.v2.bed",
+  "samples": [
+    {"sample": "BF_rep1", "condition": "BF", "bam": "align/chip/dedup/RING1_BF_rep1.dedup.bam", "input": "align/chip/dedup/RING1_input_BF_rep1.dedup.bam", "peaks": "peaks/reps/RING1_BF_rep1_peaks.narrowPeak"},
+    {"sample": "BF_rep2", "condition": "BF", "bam": "align/chip/dedup/RING1_BF_rep2.dedup.bam", "input": "align/chip/dedup/RING1_input_BF_rep2.dedup.bam", "peaks": "peaks/reps/RING1_BF_rep2_peaks.narrowPeak"},
+    {"sample": "HS_rep1", "condition": "HS", "bam": "align/chip/dedup/RING1_HS_rep1.dedup.bam", "input": "align/chip/dedup/RING1_control_HS_rep1.dedup.bam", "peaks": "peaks/reps/RING1_HS_rep1_peaks.narrowPeak"},
+    {"sample": "HS_rep2", "condition": "HS", "bam": "align/chip/dedup/RING1_HS_rep2.dedup.bam", "input": "align/chip/dedup/RING1_control_HS_rep2.dedup.bam", "peaks": "peaks/reps/RING1_HS_rep2_peaks.narrowPeak"}
+  ],
+  "pooled_peaks": {
+    "BF_pool": "peaks/RING1_BF_peaks.narrowPeak",
+    "HS_pool": "peaks/RING1_HS_peaks.narrowPeak"
+  },
+  "bdgdiff_regions": {
+    "BF_enriched": "peaks/diff/RING1_BF_unique.bed",
+    "HS_enriched": "peaks/diff/RING1_HS_unique.bed",
+    "common": "peaks/diff/RING1_BF_HS_common.bed"
+  }
+}

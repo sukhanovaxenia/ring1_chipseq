@@ -1,0 +1,9 @@
+sample	condition	kind	source_bam	bam	eligible_reads	reads_in_consensus	FRiP_consensus_read_overlap
+BF_rep1	BF	ChIP	ring/align/chip/dedup/RING1_BF_rep1.dedup.bam	ring/interpretation/bams/BF_rep1.analysis.bam	20851070	104392	0.005006553620509643
+BF_rep1_Input	BF	Input	ring/align/chip/dedup/RING1_input_BF_rep1.dedup.bam	ring/interpretation/bams/BF_rep1_Input.analysis.bam	19905671	23767	0.0011939813533540266
+BF_rep2	BF	ChIP	ring/align/chip/dedup/RING1_BF_rep2.dedup.bam	ring/interpretation/bams/BF_rep2.analysis.bam	14639713	108617	0.007419339436503981
+BF_rep2_Input	BF	Input	ring/align/chip/dedup/RING1_input_BF_rep2.dedup.bam	ring/interpretation/bams/BF_rep2_Input.analysis.bam	17373641	23950	0.0013785250886673669
+HS_rep1	HS	ChIP	ring/align/chip/dedup/RING1_HS_rep1.dedup.bam	ring/interpretation/bams/HS_rep1.analysis.bam	27078601	190235	0.007025289083435293
+HS_rep1_Input	HS	Input	ring/align/chip/dedup/RING1_control_HS_rep1.dedup.bam	ring/interpretation/bams/HS_rep1_Input.analysis.bam	33605167	34239	0.0010188611769136574
+HS_rep2	HS	ChIP	ring/align/chip/dedup/RING1_HS_rep2.dedup.bam	ring/interpretation/bams/HS_rep2.analysis.bam	21093362	146979	0.006968021503637021
+HS_rep2_Input	HS	Input	ring/align/chip/dedup/RING1_control_HS_rep2.dedup.bam	ring/interpretation/bams/HS_rep2_Input.analysis.bam	20214954	22081	0.0010923101779009737

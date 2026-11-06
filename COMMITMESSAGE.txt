@@ -1,0 +1,7 @@
+Add RING1 ChIP-seq downstream analysis (BF vs HS fibroblasts)
+
+Scripts, configuration template and results of the post-peak-calling
+analysis of RING1 ChIP-seq (GSE40740): replicate QC, consensus regions,
+csaw/edgeR differential binding, ChIPseeker annotation, deepTools
+profiles, per-replicate MACS2 bdgdiff with HOMER annotation and IGV
+snapshots of key loci.

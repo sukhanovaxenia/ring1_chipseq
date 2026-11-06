@@ -1,0 +1,9 @@
+sample	condition	kind	source_bam	bam	eligible_reads
+BF_rep1	BF	ChIP	ring/align/chip/dedup/RING1_BF_rep1.dedup.bam	ring/interpretation/bams/BF_rep1.analysis.bam	20851070
+BF_rep1_Input	BF	Input	ring/align/chip/dedup/RING1_input_BF_rep1.dedup.bam	ring/interpretation/bams/BF_rep1_Input.analysis.bam	19905671
+BF_rep2	BF	ChIP	ring/align/chip/dedup/RING1_BF_rep2.dedup.bam	ring/interpretation/bams/BF_rep2.analysis.bam	14639713
+BF_rep2_Input	BF	Input	ring/align/chip/dedup/RING1_input_BF_rep2.dedup.bam	ring/interpretation/bams/BF_rep2_Input.analysis.bam	17373641
+HS_rep1	HS	ChIP	ring/align/chip/dedup/RING1_HS_rep1.dedup.bam	ring/interpretation/bams/HS_rep1.analysis.bam	27078601
+HS_rep1_Input	HS	Input	ring/align/chip/dedup/RING1_control_HS_rep1.dedup.bam	ring/interpretation/bams/HS_rep1_Input.analysis.bam	33605167
+HS_rep2	HS	ChIP	ring/align/chip/dedup/RING1_HS_rep2.dedup.bam	ring/interpretation/bams/HS_rep2.analysis.bam	21093362
+HS_rep2_Input	HS	Input	ring/align/chip/dedup/RING1_control_HS_rep2.dedup.bam	ring/interpretation/bams/HS_rep2_Input.analysis.bam	20214954

@@ -1,0 +1,10 @@
+group	source	bed	original_n	retained_n
+BF_pool	ring/peaks/RING1_BF_peaks.narrowPeak	ring/interpretation/beds/BF_pool.bed	2372	2353
+HS_pool	ring/peaks/RING1_HS_peaks.narrowPeak	ring/interpretation/beds/HS_pool.bed	3355	3311
+BF_enriched	ring/peaks/diff/RING1_BF_unique.bed	ring/interpretation/beds/BF_enriched.bed	338	337
+HS_enriched	ring/peaks/diff/RING1_HS_unique.bed	ring/interpretation/beds/HS_enriched.bed	647	642
+common	ring/peaks/diff/RING1_BF_HS_common.bed	ring/interpretation/beds/common.bed	700	693
+BF_rep1	ring/peaks/reps/RING1_BF_rep1_peaks.narrowPeak	ring/interpretation/beds/BF_rep1.bed	421	417
+BF_rep2	ring/peaks/reps/RING1_BF_rep2_peaks.narrowPeak	ring/interpretation/beds/BF_rep2.bed	1634	1619
+HS_rep1	ring/peaks/reps/RING1_HS_rep1_peaks.narrowPeak	ring/interpretation/beds/HS_rep1.bed	2560	2531
+HS_rep2	ring/peaks/reps/RING1_HS_rep2_peaks.narrowPeak	ring/interpretation/beds/HS_rep2.bed	1550	1529

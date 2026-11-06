@@ -1,0 +1,9 @@
+sample	bam	kind	library_size	TMM_factor	bamCoverage_scale
+BF_rep1	ring/interpretation/bams/BF_rep1.analysis.bam	ChIP	20851070	1.01031574454351	0.0474694863862974
+BF_rep2	ring/interpretation/bams/BF_rep2.analysis.bam	ChIP	14639713	1.01283670204231	0.0674416220073484
+HS_rep1	ring/interpretation/bams/HS_rep1.analysis.bam	ChIP	27078601	0.999632420863091	0.0369431092212266
+HS_rep2	ring/interpretation/bams/HS_rep2.analysis.bam	ChIP	21093362	0.977604327818108	0.0484943428438176
+BF_rep1_Input	ring/interpretation/bams/BF_rep1_Input.analysis.bam	Input	19905671	1	0.0502369400157372
+BF_rep2_Input	ring/interpretation/bams/BF_rep2_Input.analysis.bam	Input	17373641	1	0.0575584588170091
+HS_rep1_Input	ring/interpretation/bams/HS_rep1_Input.analysis.bam	Input	33605167	1	0.0297573286869844
+HS_rep2_Input	ring/interpretation/bams/HS_rep2_Input.analysis.bam	Input	20214954	1	0.0494683292378504

@@ -1,0 +1,26 @@
+name: ring-interpret
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - numpy
+  - samtools
+  - bedtools
+  - deeptools
+  - r-base
+  - r-jsonlite
+  - r-ggplot2
+  - r-statmod
+  - bioconductor-csaw
+  - bioconductor-edger
+  - bioconductor-chipseeker
+  - bioconductor-rtracklayer
+  - bioconductor-genomicfeatures
+  - bioconductor-org.hs.eg.db
+  - bioconductor-annotationdbi
+  - bioconductor-clusterprofiler
+  - bioconductor-enrichplot
+  - bioconductor-gviz
+  - bioconductor-biomart
+  - bioconductor-txdb.hsapiens.ucsc.hg38.knowngene

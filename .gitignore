@@ -1,0 +1,27 @@
+# Local configuration with machine-specific paths
+config.json
+
+# Large or derived genomic files: not stored in the repository
+*.bam
+*.bai
+*.bw
+*.bigWig
+*.bigwig
+*.bdg
+*.bedGraph
+*.fastq
+*.fastq.gz
+*.fq.gz
+*.rds
+*.gz
+interpretation/
+references/
+tracks/
+
+# OS, editor and language caches
+.DS_Store
+__pycache__/
+*.pyc
+.Rhistory
+.RData
+.Rproj.user/
