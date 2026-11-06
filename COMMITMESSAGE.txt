@@ -1,7 +1,13 @@
-Add RING1 ChIP-seq downstream analysis (BF vs HS fibroblasts)
+Add preprocessing scripts and document the csaw/edgeR step
 
-Scripts, configuration template and results of the post-peak-calling
-analysis of RING1 ChIP-seq (GSE40740): replicate QC, consensus regions,
-csaw/edgeR differential binding, ChIPseeker annotation, deepTools
-profiles, per-replicate MACS2 bdgdiff with HOMER annotation and IGV
-snapshots of key loci.
+- preprocessing/: shell scripts used on the server before the
+  downstream analysis (trimming, alignment, duplicate removal, MACS2
+  callpeak on pooled and individual replicates, bdgdiff, bigWig
+  conversion, HOMER annotation, deepTools TSS profiles). Kept as used;
+  several of them still need per-sample edits before a rerun.
+- README: new section on differential binding with csaw + edgeR
+  (regions, background normalization, filterByExpr, QL model, TREAT
+  test, output files); later sections renumbered.
+- README: TSS profile section now points to
+  preprocessing/visualize_chip.sh and lists its actual parameters
+  (±1 kb, binned TMM bigWig); preprocessing/ added to the file tree.

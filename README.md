@@ -30,11 +30,12 @@
 ├── environment.yml           окружение conda
 ├── scripts/
 │   ├── run.py                основной конвейер, запуск по этапам
-│   ├── analysis.R            csaw/edgeR, ChIPseeker, GO, Gviz (вызывается из run.py)
+│   ├── analysis.R            csaw + edgeR (дифференциальный анализ), ChIPseeker, GO, Gviz; вызывается из run.py
 │   ├── install.R             установка и проверка R-пакетов
 │   ├── bdgdiff_reps.sh       MACS2 bdgdiff по отдельным повторам
 │   ├── biomart_mapping.R     необязательно: Entrez → Ensembl через BioMart
 │   └── encode_refs.py        необязательно: поиск и загрузка треков ENCODE
+├── preprocessing/            скрипты предварительных шагов (тримминг, выравнивание, коллинг, bdgdiff), в исходном виде
 ├── tests/test_helpers.py     тесты вспомогательных функций run.py
 └── results/
     ├── tables/               таблицы QC, нормализации и дифференциального анализа
@@ -125,7 +126,35 @@ python scripts/run.py report            # index.html со ссылками на 
 - по умолчанию он берёт до трёх самых значимых регионов в каждом направлении;
 - свой список можно задать файлом `ring/interpretation/loci/regions_to_plot.tsv` с колонками `chr`, `start0`, `end` и `label`, разделёнными табуляцией.
 
-### 3. bdgdiff по отдельным повторам
+### 3. Дифференциальный анализ (csaw + edgeR)
+
+Код находится в `scripts/analysis.R`, в блоке этапа `counts`; отдельно его запускать не нужно. Статистическая часть выполняется, только если в конфиге стоит `"biological_replicates_confirmed": true`. Иначе считаются лишь подсчёты и QC.
+
+1. **Регионы.** Тестируется общий набор `consensus.bed`, то есть объединение пулированных пиков BF и HS после фильтрации по blacklist. Все четыре ChIP-библиотеки оцениваются на одних и тех же координатах.
+2. **Подсчёт прочтений.** `csaw::regionCounts` считает прочтения в каждом регионе по отфильтрованным BAM этапа `prepare`. Фрагменты не удлиняются, пока в конфиге `fragment_length: null`.
+3. **Нормализация.**
+   - Факторы нормализации считаются не по пикам, а по фоновым окнам: `windowCounts` с окном `background_bin` (10 kb), затем `normFactors`. Так различие в силе связывания между линиями не гасится нормализацией.
+   - Инпут в модель не входит. Отношение ChIP/input сохраняется только для проверки в `ChIP_Input.exploratory_log2ratio.tsv`.
+4. **Фильтрация.** `filterByExpr` оставляет регионы с достаточным числом прочтений в группе (2777 из 4209). Список протестированных регионов записывается в `tested_regions.tsv`.
+5. **Модель.** `design = ~ group`, где BF — референсный уровень. `estimateDisp` и `glmQLFit` запускаются с `robust = TRUE`, коэффициент 2 соответствует HS относительно BF, так что `logFC > 0` означает сигнал выше в HS. Повторы с одинаковым номером не считаются парными.
+6. **Тест.** Используются два теста:
+   - `glmQLFTest` (колонки `PValue` и `FDR`) отвечает на вопрос, отличается ли logFC от нуля;
+   - `glmTreat` с `lfc = minimum_log2_fold_change` (колонка `FDR_TREAT`) — превышает ли |log2FC| порог.
+
+   Значимыми считаются регионы с `FDR_TREAT < fdr`. Они делятся на `HS_higher` и `BF_higher` по знаку logFC.
+
+Что получается на выходе:
+
+| Файл | Содержимое |
+|---|---|
+| `tables/differential.HS_vs_BF.tsv` | все протестированные регионы: logFC, logCPM, F, PValue, FDR, FDR_TREAT, direction |
+| `tables/differential.annotated.tsv` | то же с аннотацией ChIPseeker (этап `annotate`) |
+| `beds/HS_higher.bed`, `beds/BF_higher.bed` | значимые регионы по направлениям |
+| `tables/normFactors.txt`, `tables/normalization_QC.tsv` | размеры библиотек и факторы нормализации; из них же считается масштаб bigWig |
+| `figures/dispersion.pdf`, `QL_dispersion.pdf` | BCV и QL-дисперсии |
+| `figures/differential.volcano.pdf`, `differential.MA.pdf` | volcano и MA |
+
+### 4. bdgdiff по отдельным повторам
 
 ```bash
 bash scripts/bdgdiff_reps.sh /path/to/ring
@@ -133,7 +162,7 @@ bash scripts/bdgdiff_reps.sh /path/to/ring
 
 Скрипт сравнивает BF_repN и HS_repN, используя pileup и lambda из `peaks/reps/`. Глубину каждой пары он берёт из `*_peaks.xls`, которая соответствует наименьшему числу прочтений ChIP и контроля после фильтрации. На выходе получаются файлы `peaks/reps/diff/RING1_repN_{BF_unique,HS_unique,BF_HS_common}.bed`.
 
-### 4. Аннотация HOMER
+### 5. Аннотация HOMER
 
 ```bash
 mkdir -p peaks/reps/stats
@@ -143,20 +172,21 @@ for f in peaks/reps/diff/*.bed; do
 done
 ```
 
-### 5. Профили вокруг TSS (deepTools)
+### 6. Профили вокруг TSS (deepTools)
 
-Профили в `results/tss_profiles/` построены по регионам пулированного bdgdiff:
+Профили в `results/tss_profiles/` построены скриптом `preprocessing/visualize_chip.sh` по регионам пулированного bdgdiff, ±1 kb от TSS:
 
 ```bash
-computeMatrix reference-point --referencePoint TSS -b 3000 -a 3000 \
-    -R peaks/diff/RING1_BF_unique.bed -S <bigWig ChIP> -o BF_TSS.gz
+computeMatrix reference-point --referencePoint TSS -b 1000 -a 1000 --skipZeros \
+    -R peaks/diff/bed3/RING1_BF_unique.bed \
+    -S normalization/bin/RING1_BF_rep*.binned.TMM.bigwig -o BF_TSS.gz
+plotProfile -m BF_TSS.gz -out TSS_BF_profile.png --perGroup
 plotHeatmap -m BF_TSS.gz -out TSS_BF_profile-heatmap.png
-plotProfile -m BF_TSS.gz -out TSS_BF_profile.png
 ```
 
 Для HS команды те же.
 
-### 6. Необязательные шаги
+### 7. Необязательные шаги
 
 ```bash
 # Ensembl ID и описания генов; второй аргумент — фиксированный релиз Ensembl
